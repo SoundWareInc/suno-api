@@ -91,6 +91,8 @@ class SunoApi {
       headers: {
         'Affiliate-Id': 'undefined',
         'Device-Id': `"${this.deviceId}"`,
+        'device-id': this.deviceId,
+        'browser-token': JSON.stringify({ token: Buffer.from(JSON.stringify({ timestamp: Date.now() })).toString('base64') }),
         'x-suno-client': 'Android prerelease-4nt180t 1.0.42',
         'X-Requested-With': 'com.suno.android',
         'sec-ch-ua': '"Chromium";v="130", "Android WebView";v="130", "Not?A_Brand";v="99"',
@@ -830,13 +832,13 @@ class SunoApi {
     };
   }
 
-  public async getPersonaPaginated(personaId: string, page: number = 1): Promise<PersonaResponse> {
+    public async getPersonaPaginated(personaId: string, page: number = 1): Promise<PersonaResponse> {
     await this.keepAlive(false);
-    
+
     const url = `${SunoApi.BASE_URL}/api/persona/get-persona-paginated/${personaId}/?page=${page}`;
-    
+
     logger.info(`Fetching persona data: ${url}`);
-    
+
     const response = await this.client.get(url, {
       timeout: 10000 // 10 seconds timeout
     });
@@ -846,6 +848,360 @@ class SunoApi {
     }
 
     return response.data;
+  }
+
+  /**
+   * Upload an audio file to Suno and get a clip ID back
+   * @param audioUrl The URL of the audio file to upload
+   * @param fileName Optional filename for the uploaded audio
+   * @returns A promise that resolves to an object containing the clip ID
+   */
+  public async uploadAudio(audioUrl: string, fileName?: string): Promise<any> {
+    await this.keepAlive(false);
+
+    try {
+      // Step 1: Initialize upload
+      logger.info('Step 1: Initializing upload...');
+      const extension = fileName ? fileName.split('.').pop() || 'mp3' : 'mp3';
+      
+      let uploadInitResponse;
+      try {
+        uploadInitResponse = await this.client.post(
+          `${SunoApi.BASE_URL}/api/uploads/audio/`,
+          { extension }
+        );
+        logger.info(`✅ Step 1 SUCCESS - Init response status: ${uploadInitResponse.status}`);
+        logger.info(`Init response data:`, JSON.stringify(uploadInitResponse.data, null, 2));
+      } catch (initError: any) {
+        logger.error('❌ Step 1 FAILED - Error in upload initialization:', initError.message);
+        logger.error('Init error response:', initError.response?.data);
+        logger.error('Init error status:', initError.response?.status);
+        throw new Error('Failed to initialize upload: ' + initError.message + (initError.response?.data ? ' - ' + JSON.stringify(initError.response.data) : ''));
+      }
+
+      if (uploadInitResponse.status !== 200) {
+        throw new Error('Failed to initialize upload: ' + uploadInitResponse.statusText);
+      }
+
+      const { id: audioId, url: uploadUrl, fields } = uploadInitResponse.data;
+      logger.info(`Upload initialized with ID: ${audioId}`);
+      logger.info(`Upload URL: ${uploadUrl}`);
+      logger.info(`Response data structure:`, JSON.stringify(uploadInitResponse.data, null, 2));
+
+      // Step 2: Download the audio file
+      logger.info('Step 2: Downloading audio file...');
+      const audioResponse = await this.client.get(audioUrl, {
+        responseType: 'arraybuffer'
+      });
+
+      if (audioResponse.status !== 200) {
+        logger.error('❌ Step 2 FAILED - Failed to download audio file');
+        throw new Error('Failed to download audio file');
+      }
+      
+      logger.info(`✅ Step 2 SUCCESS - Downloaded ${audioResponse.data.byteLength} bytes`);
+      logger.info(`Downloaded file content-type: ${audioResponse.headers['content-type']}`);
+      
+      // Check if downloaded content type matches what S3 expects
+      const downloadedType = audioResponse.headers['content-type'] || 'unknown';
+      const expectedType = fields['Content-Type'] || 'unknown';
+      logger.info(`Content-Type comparison - Downloaded: ${downloadedType}, S3 expects: ${expectedType}`);
+
+      // Step 3: Upload file to S3-like storage
+      logger.info('Step 3: Uploading file to storage...');
+      
+      // Create FormData in EXACT Chrome order: Content-Type, key, AWSAccessKeyId, policy, signature, file
+      logger.info('🔧 Creating FormData in exact Chrome DevTools order...');
+      logger.info('Upload URL:', uploadUrl);
+      logger.info('Audio size:', audioResponse.data.byteLength);
+      logger.info('Fields from Suno:', JSON.stringify(fields, null, 2));
+      
+      const form = new FormData();
+      
+      // EXACT Chrome order from DevTools capture
+      form.append('Content-Type', fields['Content-Type']);
+      form.append('key', fields['key']);
+      form.append('AWSAccessKeyId', fields['AWSAccessKeyId']);
+      form.append('policy', fields['policy']);
+      form.append('signature', fields['signature']);
+      
+      // File field with filename and Content-Type (exactly like Chrome)
+      const audioBlob = new Blob([audioResponse.data], { type: fields['Content-Type'] || 'audio/mpeg' });
+      form.append('file', audioBlob, fileName || 'upload.mp3');
+      
+      logger.info('FormData created in Chrome DevTools order');
+      logger.info('Making S3 upload request...');
+      
+      // Use fetch with exact Chrome headers
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'POST',
+        body: form,
+        headers: {
+          'Origin': 'https://suno.com',
+          'Referer': 'https://suno.com/',
+          'Accept': '*/*',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'cross-site',
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
+          // Don't set Content-Type - let fetch set it with proper boundary
+        }
+      });
+      
+      logger.info(`S3 Upload response status: ${uploadResponse.status}`);
+      logger.info(`S3 Upload response statusText: ${uploadResponse.statusText}`);
+      
+      if (uploadResponse.status !== 204) {
+        const responseText = await uploadResponse.text();
+        logger.error(`❌ Step 3 FAILED - S3 Upload failed with status ${uploadResponse.status}: ${uploadResponse.statusText}`);
+        logger.error(`S3 Response body:`, responseText);
+        throw new Error('Failed to upload audio file: ' + uploadResponse.statusText + ' - ' + responseText);
+      }
+      
+      logger.info(`✅ Step 3 SUCCESS - S3 upload completed`);
+
+      // Step 4: Finish upload
+      logger.info('Step 4: Finishing upload...');
+      const finishResponse = await this.client.post(
+        `${SunoApi.BASE_URL}/api/uploads/audio/${audioId}/upload-finish/`,
+        {
+          upload_type: "file_upload",
+          upload_filename: fileName || 'upload.mp3'
+        }
+      );
+
+      if (finishResponse.status !== 200) {
+        throw new Error('Failed to finish upload: ' + finishResponse.statusText);
+      }
+
+      // Step 5: Wait for upload to complete
+      logger.info('Step 5: Waiting for upload to complete...');
+      let uploadStatus;
+      let attempts = 0;
+      const maxAttempts = 30;
+
+      while (attempts < maxAttempts) {
+        const statusResponse = await this.client.get(
+          `${SunoApi.BASE_URL}/api/uploads/audio/${audioId}/`
+        );
+
+        uploadStatus = statusResponse.data;
+        logger.info(`Upload status: ${uploadStatus.status}`);
+
+        if (uploadStatus.status === 'complete') {
+          break;
+        } else if (uploadStatus.status === 'error') {
+          throw new Error('Upload failed: ' + uploadStatus.error_message);
+        } else if ('detail' in uploadStatus && uploadStatus.detail === 'Unauthorized') {
+          throw new Error('Unauthorized - check your cookies');
+        }
+
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+      }
+
+      if (attempts >= maxAttempts) {
+        throw new Error('Upload timed out waiting for completion');
+      }
+
+      // Step 6: Initialize clip to get clip_id
+      logger.info('Step 6: Initializing clip...');
+      const clipResponse = await this.client.post(
+        `${SunoApi.BASE_URL}/api/uploads/audio/${audioId}/initialize-clip/`
+      );
+
+      if (clipResponse.status !== 200) {
+        throw new Error('Failed to initialize clip: ' + clipResponse.statusText);
+      }
+
+      const { clip_id } = clipResponse.data;
+      logger.info(`Clip created with ID: ${clip_id}`);
+
+      return {
+        clip_id,
+        audio_id: audioId,
+        upload_id: audioId,
+        status: 'complete',
+        filename: fileName || 'upload.mp3'
+      };
+
+    } catch (error: any) {
+      logger.error('Upload error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check the status of an uploaded audio file
+   * @param uploadId The upload ID returned from uploadAudio
+   * @returns A promise that resolves to the upload status
+   */
+  public async getUploadStatus(uploadId: string): Promise<any> {
+    await this.keepAlive(false);
+
+    const response = await this.client.get(
+      `${SunoApi.BASE_URL}/api/uploads/audio/${uploadId}/`
+    );
+
+    if (response.status !== 200) {
+      throw new Error('Failed to get upload status: ' + response.statusText);
+    }
+
+    return response.data;
+  }
+
+  /**
+   * Upload audio from a file buffer
+   * @param audioBuffer The audio file buffer
+   * @param fileName The filename with extension
+   * @returns A promise that resolves to an object containing the clip ID
+   */
+  public async uploadAudioBuffer(audioBuffer: Buffer, fileName: string): Promise<any> {
+    await this.keepAlive(false);
+
+    try {
+      // Step 1: Initialize upload
+      logger.info('Step 1: Initializing buffer upload...');
+      const extension = fileName.split('.').pop() || 'mp3';
+      
+      const uploadInitResponse = await this.client.post(
+        `${SunoApi.BASE_URL}/api/uploads/audio/`,
+        { extension }
+      );
+
+      if (uploadInitResponse.status !== 200) {
+        throw new Error('Failed to initialize upload: ' + uploadInitResponse.statusText);
+      }
+
+      const { id: audioId, url: uploadUrl, fields } = uploadInitResponse.data;
+      logger.info(`Upload initialized with ID: ${audioId}`);
+      logger.info(`Upload URL: ${uploadUrl}`);
+
+      // Step 2: Upload buffer to S3 using EXACT Chrome format
+      logger.info('Step 2: Uploading buffer to storage...');
+      logger.info('🔧 Creating FormData in exact Chrome DevTools order...');
+      logger.info('Buffer size:', audioBuffer.length);
+      logger.info('Fields from Suno:', JSON.stringify(fields, null, 2));
+      
+      const form = new FormData();
+      
+      // EXACT Chrome order from DevTools capture
+      form.append('Content-Type', fields['Content-Type']);
+      form.append('key', fields['key']);
+      form.append('AWSAccessKeyId', fields['AWSAccessKeyId']);
+      form.append('policy', fields['policy']);
+      form.append('signature', fields['signature']);
+      
+      // File field with filename and Content-Type (exactly like Chrome)
+      const audioBlob = new Blob([audioBuffer], { type: fields['Content-Type'] || 'audio/mpeg' });
+      form.append('file', audioBlob, fileName);
+      
+      logger.info('FormData created in Chrome DevTools order');
+      logger.info('Making S3 upload request...');
+      
+      // Use fetch with exact Chrome headers
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'POST',
+        body: form,
+        headers: {
+          'Origin': 'https://suno.com',
+          'Referer': 'https://suno.com/',
+          'Accept': '*/*',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'cross-site',
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
+          // Don't set Content-Type - let fetch set it with proper boundary
+        }
+      });
+      
+      logger.info(`S3 Upload response status: ${uploadResponse.status}`);
+      logger.info(`S3 Upload response statusText: ${uploadResponse.statusText}`);
+      
+      if (uploadResponse.status !== 204) {
+        const responseText = await uploadResponse.text();
+        logger.error(`❌ Step 2 FAILED - S3 Upload failed with status ${uploadResponse.status}: ${uploadResponse.statusText}`);
+        logger.error(`S3 Response body:`, responseText);
+        throw new Error('Failed to upload audio file: ' + uploadResponse.statusText + ' - ' + responseText);
+      }
+      
+      logger.info(`✅ Step 2 SUCCESS - S3 upload completed`);
+
+      // Step 3: Finish upload
+      logger.info('Step 3: Finishing upload...');
+      const finishResponse = await this.client.post(
+        `${SunoApi.BASE_URL}/api/uploads/audio/${audioId}/upload-finish/`,
+        {
+          upload_type: "file_upload",
+          upload_filename: fileName
+        }
+      );
+
+      if (finishResponse.status !== 200) {
+        throw new Error('Failed to finish upload: ' + finishResponse.statusText);
+      }
+
+      // Step 4: Wait for upload to complete
+      logger.info('Step 4: Waiting for upload to complete...');
+      let uploadStatus;
+      let attempts = 0;
+      const maxAttempts = 30;
+
+      while (attempts < maxAttempts) {
+        const statusResponse = await this.client.get(
+          `${SunoApi.BASE_URL}/api/uploads/audio/${audioId}/`
+        );
+
+        uploadStatus = statusResponse.data;
+        logger.info(`Upload status: ${uploadStatus.status}`);
+
+        if (uploadStatus.status === 'complete') {
+          break;
+        } else if (uploadStatus.status === 'error') {
+          throw new Error('Upload failed: ' + uploadStatus.error_message);
+        } else if ('detail' in uploadStatus && uploadStatus.detail === 'Unauthorized') {
+          throw new Error('Unauthorized - check your cookies');
+        }
+
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+      }
+
+      if (attempts >= maxAttempts) {
+        throw new Error('Upload timed out waiting for completion');
+      }
+
+      // Step 5: Initialize clip to get clip_id
+      logger.info('Step 5: Initializing clip...');
+      const clipResponse = await this.client.post(
+        `${SunoApi.BASE_URL}/api/uploads/audio/${audioId}/initialize-clip/`
+      );
+
+      if (clipResponse.status !== 200) {
+        throw new Error('Failed to initialize clip: ' + clipResponse.statusText);
+      }
+
+      const { clip_id } = clipResponse.data;
+      logger.info(`Clip created with ID: ${clip_id}`);
+
+      return {
+        clip_id,
+        audio_id: audioId,
+        upload_id: audioId,
+        status: 'complete',
+        filename: fileName
+      };
+
+    } catch (error: any) {
+      logger.error('Upload buffer error:', error);
+      throw error;
+    }
   }
 }
 
