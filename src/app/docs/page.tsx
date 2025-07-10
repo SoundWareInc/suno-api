@@ -34,6 +34,9 @@ export default function Docs() {
 - \`/api/clip\`:  Get clip information based on ID passed as query parameter \`id\`
 - \`/api/concat\`: Generate the whole song from extensions
 - \`/api/persona\`: Get persona information and clips based on ID and page number
+- \`/api/upload\`: Upload audio from URL - provide audio_url and optional filename
+- \`/api/upload-file\`: Upload audio file directly - multipart/form-data with file field
+- \`/api/upload_status\`: Check upload status - provide upload_id parameter
 \`\`\`
 
 Feel free to explore the detailed API parameters and conduct tests on this page.

@@ -731,6 +731,194 @@
           }
         }
       }
+    },
+    "/api/upload": {
+      "post": {
+        "summary": "Upload audio from URL",
+        "description": "Upload an audio file from a URL to Suno",
+        "tags": ["default"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["audio_url"],
+                "properties": {
+                  "audio_url": {
+                    "type": "string",
+                    "description": "URL of the audio file to upload",
+                    "example": "https://example.com/audio.mp3"
+                  },
+                  "filename": {
+                    "type": "string",
+                    "description": "Optional filename for the uploaded audio",
+                    "example": "my-audio.mp3"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Audio uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clip_id": {
+                      "type": "string",
+                      "description": "ID of the created audio clip"
+                    },
+                    "audio_id": {
+                      "type": "string",
+                      "description": "ID of the uploaded audio"
+                    },
+                    "upload_id": {
+                      "type": "string",
+                      "description": "ID of the upload process"
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Upload status"
+                    },
+                    "filename": {
+                      "type": "string",
+                      "description": "Filename of the uploaded audio"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing audio_url"
+          },
+          "401": {
+            "description": "Unauthorized - invalid cookie"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/upload-file": {
+      "post": {
+        "summary": "Upload audio file directly",
+        "description": "Upload an audio file directly to Suno via multipart form data",
+        "tags": ["default"],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Audio file to upload (supports MP3, WAV, etc.)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Audio file uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clip_id": {
+                      "type": "string",
+                      "description": "ID of the created audio clip"
+                    },
+                    "audio_id": {
+                      "type": "string",
+                      "description": "ID of the uploaded audio"
+                    },
+                    "upload_id": {
+                      "type": "string",
+                      "description": "ID of the upload process"
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Upload status"
+                    },
+                    "filename": {
+                      "type": "string",
+                      "description": "Filename of the uploaded audio"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - no file provided"
+          },
+          "401": {
+            "description": "Unauthorized - invalid cookie"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/upload_status": {
+      "get": {
+        "summary": "Get upload status",
+        "description": "Check the status of an audio upload",
+        "tags": ["default"],
+        "parameters": [
+          {
+            "name": "upload_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the upload to check"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upload status retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "Upload status (processing, complete, error)"
+                    },
+                    "error_message": {
+                      "type": "string",
+                      "description": "Error message if status is error"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing upload_id"
+          },
+          "401": {
+            "description": "Unauthorized - invalid cookie"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
     }
   },
   "components": {

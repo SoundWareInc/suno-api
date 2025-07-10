@@ -148,10 +148,10 @@ Suno API currently mainly implements the following APIs:
 
 ```bash
 - `/api/generate`: Generate music
-- `/v1/chat/completions`: Generate music - Call the generate API in a format that works with OpenAI’s API.
+- `/v1/chat/completions`: Generate music - Call the generate API in a format that works with OpenAI's API.
 - `/api/custom_generate`: Generate music (Custom Mode, support setting lyrics, music style, title, etc.)
 - `/api/generate_lyrics`: Generate lyrics based on prompt
-- `/api/get`: Get music information based on the id. Use “,” to separate multiple ids.
+- `/api/get`: Get music information based on the id. Use "," to separate multiple ids.
     If no IDs are provided, all music will be returned.
 - `/api/get_limit`: Get quota Info
 - `/api/extend_audio`: Extend audio length
@@ -159,12 +159,37 @@ Suno API currently mainly implements the following APIs:
 - `/api/get_aligned_lyrics`: Get list of timestamps for each word in the lyrics
 - `/api/clip`: Get clip information based on ID passed as query parameter `id`
 - `/api/concat`: Generate the whole song from extensions
+- `/api/upload`: Upload audio from URL - provide audio_url and optional filename
+- `/api/upload-file`: Upload audio file directly - multipart/form-data with file field
+- `/api/upload_status`: Check upload status - provide upload_id parameter
 ```
 
 You can also specify the cookies in the `Cookie` header of your request, overriding the default cookies in the `SUNO_COOKIE` environment variable. This comes in handy when, for example, you want to use multiple free accounts at the same time.
 
 For more detailed documentation, please check out the demo site:
 [suno.gcui.ai/docs](https://suno.gcui.ai/docs)
+
+## Upload Examples
+
+### Upload from URL
+```bash
+curl -X POST http://localhost:3000/api/upload \
+  -H "Content-Type: application/json" \
+  -d '{"audio_url": "https://example.com/audio.mp3", "filename": "test.mp3"}'
+```
+
+### Upload File Directly  
+```bash
+curl -X POST http://localhost:3000/api/upload-file \
+  -F "file=@/path/to/audio.mp3"
+```
+
+### Check Upload Status
+```bash
+curl "http://localhost:3000/api/upload_status?upload_id=your_upload_id"
+```
+
+All upload endpoints return: `{"clip_id": "...", "audio_id": "...", "status": "complete", "filename": "..."}`
 
 ## API Integration Code Examples
 
