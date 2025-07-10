@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Swagger from '../components/Swagger';
 import spec from './swagger-suno-api.json'; // 直接导入JSON文件
@@ -6,6 +8,16 @@ import Markdown from 'react-markdown';
 
 
 export default function Docs() {
+    const downloadPostmanCollection = () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(spec, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "suno-api-postman.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    };
+
     return (
         <>
             <Section className="my-10">
@@ -21,11 +33,11 @@ export default function Docs() {
 \`\`\`bash
 - \`/api/generate\`: Generate music
 - \`/v1/chat/completions\`: Generate music - Call the generate API in a format 
-  that works with OpenAI’s API.
+  that works with OpenAI's API.
 - \`/api/custom_generate\`: Generate music (Custom Mode, support setting lyrics, 
   music style, title, etc.)
 - \`/api/generate_lyrics\`: Generate lyrics based on prompt
-- \`/api/get\`: Get music information based on the id. Use “,” to separate multiple 
+- \`/api/get\`: Get music information based on the id. Use "," to separate multiple 
     ids.  If no IDs are provided, all music will be returned.
 - \`/api/get_limit\`: Get quota Info
 - \`/api/extend_audio\`: Extend audio length
@@ -44,6 +56,36 @@ Feel free to explore the detailed API parameters and conduct tests on this page.
                     </Markdown>
                 </article>
             </Section>
+
+            <Section className="my-10">
+                <article className='prose lg:prose-lg max-w-3xl py-5'>
+                    <h2 className='text-center'>
+                        Import to Postman
+                    </h2>
+                    <div className='text-center space-y-4'>
+                        <p className='text-gray-600'>
+                            Easily import all API endpoints into Postman for testing
+                        </p>
+                        <button 
+                            onClick={downloadPostmanCollection}
+                            className='bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-colors duration-200'
+                        >
+                            📥 Download for Postman
+                        </button>
+                        <div className='text-sm text-gray-500 max-w-md mx-auto'>
+                            <p><strong>How to import:</strong></p>
+                            <ol className='text-left space-y-1'>
+                                <li>1. Click the download button above</li>
+                                <li>2. Open Postman</li>
+                                <li>3. Click "Import" → "Upload Files"</li>
+                                <li>4. Select the downloaded JSON file</li>
+                                <li>5. All endpoints will be imported! 🚀</li>
+                            </ol>
+                        </div>
+                    </div>
+                </article>
+            </Section>
+
             <Section className="my-10">
                 <article className='prose lg:prose-lg max-w-3xl py-10'>
                     <h2 className='text-center'>
