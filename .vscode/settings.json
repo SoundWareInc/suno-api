@@ -1,0 +1,141 @@
+{
+    // Editor settings
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": true,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    
+    // TypeScript settings
+    "typescript.preferences.quoteStyle": "single",
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "typescript.suggest.autoImports": true,
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    
+    // Files settings
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/node_modules": true,
+        "**/.next": true,
+        ".vscode/chrome-debug-user-data": true
+    },
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/**": true,
+        "**/.next/**": true
+    },
+    
+    // Search settings
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/.next": true,
+        "**/dist": true,
+        "**/.git": true,
+        "**/coverage": true
+    },
+    
+    // Language-specific settings
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.eslint": "explicit"
+        }
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.eslint": "explicit"
+        }
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.wordWrap": "on"
+    },
+    
+    // Terminal settings
+    "terminal.integrated.defaultProfile.osx": "bash",
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    
+    // ESLint settings
+    "eslint.workingDirectories": ["${workspaceFolder}"],
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact"
+    ],
+    
+    // Emmet settings
+    "emmet.includeLanguages": {
+        "typescript": "html",
+        "typescriptreact": "html"
+    },
+    
+    // Auto-save settings
+    "files.autoSave": "onFocusChange",
+    
+    // Git settings
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    
+    // Extension recommendations
+    "extensions.showRecommendationsOnlyOnDemand": false,
+    
+    // Suno API specific settings
+    "rest-client.environmentVariables": {
+        "local": {
+            "baseUrl": "http://localhost:3000",
+            "apiKey": ""
+        },
+        "production": {
+            "baseUrl": "https://your-production-url.com",
+            "apiKey": ""
+        }
+    },
+    
+    // Debug console settings
+    "debug.console.fontSize": 12,
+    "debug.console.lineHeight": 16,
+    "debug.console.wordWrap": true,
+    
+    // Integrated terminal settings for Next.js
+    "terminal.integrated.env.osx": {
+        "NODE_ENV": "development"
+    },
+    
+    // Explorer settings
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+        "*.ts": "${capture}.js, ${capture}.d.ts, ${capture}.js.map",
+        "*.tsx": "${capture}.ts, ${capture}.d.ts",
+        "package.json": "package-lock.json, pnpm-lock.yaml, yarn.lock",
+        ".env": ".env.*, .env-*",
+        "README.md": "README_*.md"
+    },
+    
+    // Breadcrumbs
+    "breadcrumbs.enabled": true,
+    "breadcrumbs.showFiles": true,
+    "breadcrumbs.showClasses": true,
+    "breadcrumbs.showFunctions": true,
+    
+    // Problems panel
+    "problems.showCurrentInStatus": true,
+    
+    // Task settings
+    "task.autoDetect": "on",
+    "task.showDecorations": true
+} 

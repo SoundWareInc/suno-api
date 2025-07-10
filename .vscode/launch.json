@@ -1,0 +1,143 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "🚀 Debug Next.js Dev Server",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/node_modules/.bin/next",
+            "args": ["dev"],
+            "env": {
+                "NODE_OPTIONS": "--inspect"
+            },
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "node",
+            "skipFiles": [
+                "<node_internals>/**",
+                "${workspaceFolder}/node_modules/**"
+            ],
+            "serverReadyAction": {
+                "pattern": "- Local:.+(https?://.+)",
+                "uriFormat": "%s",
+                "action": "debugWithChrome"
+            },
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "🔗 Attach to Next.js Server",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "restart": true,
+            "skipFiles": [
+                "<node_internals>/**",
+                "${workspaceFolder}/node_modules/**"
+            ]
+        },
+        {
+            "name": "🌐 Debug Chrome Frontend",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}",
+            "sourceMapPathOverrides": {
+                "webpack:///./*": "${webRoot}/*",
+                "webpack:///src/*": "${webRoot}/src/*",
+                "webpack:///*": "*"
+            },
+            "userDataDir": "${workspaceFolder}/.vscode/chrome-debug-user-data"
+        },
+        {
+            "name": "🔧 Debug API Routes Only",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/node_modules/.bin/next",
+            "args": ["dev"],
+            "env": {
+                "NODE_OPTIONS": "--inspect=9230"
+            },
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "node",
+            "skipFiles": [
+                "<node_internals>/**",
+                "${workspaceFolder}/node_modules/**",
+                "${workspaceFolder}/src/app/**/page.tsx",
+                "${workspaceFolder}/src/app/**/layout.tsx",
+                "${workspaceFolder}/src/app/components/**"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "📤 Debug Upload Functionality",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/node_modules/.bin/next",
+            "args": ["dev"],
+            "env": {
+                "NODE_OPTIONS": "--inspect=9231",
+                "DEBUG": "suno-api:upload"
+            },
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "node",
+            "skipFiles": [
+                "<node_internals>/**",
+                "${workspaceFolder}/node_modules/**"
+            ],
+            "console": "integratedTerminal",
+            "stopOnEntry": false
+        },
+        {
+            "name": "🧪 Debug with Test Request",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/debug-test.js",
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "node",
+            "skipFiles": [
+                "<node_internals>/**",
+                "${workspaceFolder}/node_modules/**"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "NODE_ENV": "development"
+            }
+        },
+        {
+            "name": "🏗️ Debug Production Build",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/node_modules/.bin/next",
+            "args": ["start"],
+            "env": {
+                "NODE_OPTIONS": "--inspect",
+                "NODE_ENV": "production"
+            },
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "node",
+            "skipFiles": [
+                "<node_internals>/**",
+                "${workspaceFolder}/node_modules/**"
+            ],
+            "console": "integratedTerminal",
+            "preLaunchTask": "🏗️ Build Production"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "🔥 Full Debug Session",
+            "configurations": [
+                "🚀 Debug Next.js Dev Server",
+                "🌐 Debug Chrome Frontend"
+            ],
+            "preLaunchTask": "📦 Install Dependencies",
+            "stopAll": true
+        },
+        {
+            "name": "🎯 API Development Mode",
+            "configurations": [
+                "🔧 Debug API Routes Only"
+            ],
+            "preLaunchTask": "🏥 Test API Health"
+        }
+    ]
+} 

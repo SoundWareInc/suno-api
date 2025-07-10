@@ -1,0 +1,70 @@
+{
+    "recommendations": [
+        // Essential TypeScript/Next.js development
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        
+        // API development
+        "humao.rest-client",
+        "42crunch.vscode-openapi",
+        "arjun.swagger-viewer",
+        "rangav.vscode-thunder-client",
+        
+        // Node.js debugging and development
+        "ms-vscode.js-debug",
+        "christian-kohler.npm-intellisense",
+        "eg2.vscode-npm-script",
+        "christian-kohler.path-intellisense",
+        
+        // Git and version control
+        "eamodio.gitlens",
+        "github.vscode-pull-request-github",
+        "github.vscode-github-actions",
+        
+        // Development utilities
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "ms-vscode.live-server",
+        "ritwickdey.liveserver",
+        
+        // Code quality and formatting
+        "streetsidesoftware.code-spell-checker",
+        "aaron-bond.better-comments",
+        "gruntfuggly.todo-tree",
+        
+        // Docker and deployment
+        "ms-azuretools.vscode-docker",
+        "ms-vscode-remote.remote-containers",
+        
+        // Documentation
+        "yzhang.markdown-all-in-one",
+        "davidanson.vscode-markdownlint",
+        "bierner.markdown-mermaid",
+        
+        // Testing
+        "hbenl.vscode-test-explorer",
+        "ms-vscode.test-adapter-converter",
+        
+        // Environment management
+        "mikestead.dotenv",
+        "irongeek.vscode-env",
+        
+        // Database/API tools (for when working with external APIs)
+        "ckolkman.vscode-postgres",
+        "mtxr.sqltools",
+        
+        // Productivity
+        "formulahendry.auto-rename-tag",
+        "ms-vscode.vscode-json",
+        "bradlc.vscode-tailwindcss",
+        "zignd.html-css-class-completion"
+    ],
+    "unwantedRecommendations": [
+        // Extensions that might conflict or are not needed
+        "ms-vscode.vscode-typescript",
+        "hookyqr.beautify",
+        "hbenl.vscode-mocha-test-adapter"
+    ]
+} 
