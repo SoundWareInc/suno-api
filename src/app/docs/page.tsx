@@ -77,7 +77,7 @@ Feel free to explore the detailed API parameters and conduct tests on this page.
                             <ol className='text-left space-y-1'>
                                 <li>1. Click the download button above</li>
                                 <li>2. Open Postman</li>
-                                <li>3. Click "Import" → "Upload Files"</li>
+                                <li>3. Click &quot;Import&quot; → &quot;Upload Files&quot;</li>
                                 <li>4. Select the downloaded JSON file</li>
                                 <li>5. All endpoints will be imported! 🚀</li>
                             </ol>
