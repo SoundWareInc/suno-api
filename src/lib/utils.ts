@@ -113,6 +113,9 @@ export const waitForRequests = (page: Page, signal: AbortSignal): Promise<void> 
 
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Accept-Language, Cache-Control, Cookie, X-HTTP-Method-Override, X-Forwarded-For, X-Real-IP, User-Agent, Referer, Origin, Host, Connection, Pragma, X-CSRF-Token, X-Requested-With, If-Modified-Since, If-None-Match, If-Match, If-Unmodified-Since, If-Range, Range, Accept-Encoding, Accept-Charset, Keep-Alive, X-Custom-Header, Device-Id, browser-token, x-suno-client, X-Requested-With, sec-ch-ua, sec-ch-ua-mobile, sec-ch-ua-platform, Affiliate-Id',
+  'Access-Control-Max-Age': '86400', // 24 hours
+  'Access-Control-Expose-Headers': 'Content-Length, Content-Range, X-Content-Range, X-Total-Count',
+  'Vary': 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
 }
