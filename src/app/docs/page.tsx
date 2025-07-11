@@ -87,6 +87,95 @@ Feel free to explore the detailed API parameters and conduct tests on this page.
             </Section>
 
             <Section className="my-10">
+                <article className='prose lg:prose-lg max-w-3xl py-5'>
+                    <h2 className='text-center'>
+                        Copy API Info for AI Agents
+                    </h2>
+                    <div className='text-center space-y-4'>
+                        <p className='text-gray-600'>
+                            Complete API endpoint information for easy copy-paste to AI agents
+                        </p>
+                        <div className='bg-gray-50 p-4 rounded-lg border'>
+                            <textarea
+                                className='w-full h-96 p-3 text-xs font-mono bg-white border rounded resize-y'
+                                readOnly
+                                value={`SUNO API ENDPOINTS:
+
+POST /api/generate
+Body: {"prompt": "string", "make_instrumental": boolean, "model": "string", "wait_audio": boolean}
+Response: Array of AudioInfo objects
+
+POST /api/custom_generate  
+Body: {"prompt": "string", "tags": "string", "title": "string", "make_instrumental": boolean, "model": "string", "wait_audio": boolean, "negative_tags": "string"}
+Response: Array of AudioInfo objects
+
+POST /api/generate_lyrics
+Body: {"prompt": "string"}
+Response: Generated lyrics object
+
+POST /api/generate_stems
+Body: {"audio_id": "string"}
+Response: AudioInfo object with stem information
+
+POST /api/extend_audio
+Body: {"audio_id": "string", "prompt": "string", "continue_at": number, "tags": "string", "negative_tags": "string", "title": "string", "model": "string", "wait_audio": boolean}
+Response: Array of AudioInfo objects
+
+POST /api/concat
+Body: {"clip_id": "string"}
+Response: AudioInfo object
+
+GET /api/get
+Query: ids (comma-separated), page
+Response: Array of AudioInfo objects
+
+GET /api/clip
+Query: id (required)
+Response: AudioInfo object
+
+GET /api/persona
+Query: id (required), page
+Response: Persona information object
+
+GET /api/get_limit
+Response: {"credits_left": number, "period": "string", "monthly_limit": number, "monthly_usage": number}
+
+GET /api/get_aligned_lyrics
+Query: song_id (required)
+Response: Lyric alignment object
+
+POST /api/upload
+Body: {"audio_url": "string", "filename": "string"}
+Response: {"clip_id": "string", "audio_id": "string", "upload_id": "string", "status": "string", "filename": "string"}
+
+POST /api/upload-file
+Body: multipart/form-data with file field
+Response: {"clip_id": "string", "audio_id": "string", "upload_id": "string", "status": "string", "filename": "string"}
+
+GET /api/upload_status
+Query: upload_id (required)
+Response: {"status": "string", "error_message": "string"}
+
+AudioInfo Schema: {"id": "string", "title": "string", "image_url": "string", "lyric": "string", "audio_url": "string", "video_url": "string", "created_at": "string", "model_name": "string", "gpt_description_prompt": "string", "prompt": "string", "status": "string", "type": "string", "tags": "string", "negative_tags": "string", "duration": "string", "error_message": "string"}
+
+Common Response Codes: 200 (Success), 400 (Bad Request), 401 (Unauthorized), 402 (Payment Required), 500 (Internal Server Error)
+Authentication: Cookie-based (SUNO_COOKIE env var)
+Base URL: http://localhost:3000`}
+                                onClick={(e) => {
+                                    const target = e.target as HTMLTextAreaElement;
+                                    target.select();
+                                    navigator.clipboard.writeText(target.value);
+                                }}
+                            />
+                        </div>
+                        <p className='text-sm text-gray-500'>
+                            💡 Click the text area above to select all and copy to clipboard
+                        </p>
+                    </div>
+                </article>
+            </Section>
+
+            <Section className="my-10">
                 <article className='prose lg:prose-lg max-w-3xl py-10'>
                     <h2 className='text-center'>
                         Details of the API and testing it online
