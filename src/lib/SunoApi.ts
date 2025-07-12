@@ -1054,6 +1054,84 @@ class SunoApi {
   }
 
   /**
+   * Convert an audio track to WAV format
+   * @param clipId The ID of the audio clip to convert
+   * @returns A promise that resolves when conversion is initiated
+   */
+  public async convertToWav(clipId: string): Promise<void> {
+    await this.keepAlive(false);
+
+    const response = await this.client.post(
+      `${SunoApi.BASE_URL}/api/gen/${clipId}/convert_wav/`,
+      {},
+      {
+        timeout: 10000 // 10 seconds timeout
+      }
+    );
+
+    if (response.status !== 204) {
+      throw new Error('Failed to convert to WAV: ' + response.statusText);
+    }
+  }
+
+  /**
+   * Get the WAV file URL for a converted audio clip
+   * @param clipId The ID of the audio clip
+   * @returns A promise that resolves to an object containing the WAV file URL
+   */
+  public async getWavFileUrl(clipId: string): Promise<{ wav_file_url: string }> {
+    await this.keepAlive(false);
+
+    const response = await this.client.get(
+      `${SunoApi.BASE_URL}/api/gen/${clipId}/wav_file/`,
+      {
+        timeout: 10000 // 10 seconds timeout
+      }
+    );
+
+    if (response.status !== 200) {
+      throw new Error('Failed to get WAV file URL: ' + response.statusText);
+    }
+
+    return response.data;
+  }
+
+  /**
+   * Convert audio to WAV and get the file URL (convenience method)
+   * @param clipId The ID of the audio clip
+   * @param waitForConversion Whether to wait for conversion to complete
+   * @returns A promise that resolves to the WAV file URL
+   */
+  public async getWavFile(clipId: string, waitForConversion: boolean = true): Promise<{ wav_file_url: string }> {
+    // First trigger the conversion
+    await this.convertToWav(clipId);
+    
+    if (waitForConversion) {
+      // Wait a bit for conversion to complete
+      await sleep(2, 5);
+      
+      // Try to get the WAV file URL with retries
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      while (attempts < maxAttempts) {
+        try {
+          return await this.getWavFileUrl(clipId);
+        } catch (error: any) {
+          attempts++;
+          if (attempts >= maxAttempts) {
+            throw error;
+          }
+          await sleep(2, 3);
+        }
+      }
+    }
+    
+    // If not waiting, just try to get the URL immediately
+    return await this.getWavFileUrl(clipId);
+  }
+
+  /**
    * Upload audio from a file buffer
    * @param audioBuffer The audio file buffer
    * @param fileName The filename with extension
