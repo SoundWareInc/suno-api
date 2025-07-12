@@ -720,6 +720,116 @@ class SunoApi {
     }));
   }
 
+  /**
+   * Generate all stems (12 instrument stems) for a song.
+   * @param song_id The ID of the song to generate all stems for.
+   * @param title Optional title for the stems.
+   * @param wait_audio Indicates if the method should wait for the audio files to be fully generated before returning.
+   * @returns A promise that resolves to an array of AudioInfo objects representing all generated stems.
+   */
+  public async generateAllStems(
+    song_id: string,
+    title?: string,
+    wait_audio: boolean = false
+  ): Promise<AudioInfo[]> {
+    await this.keepAlive(false);
+    
+    const payload: any = {
+      token: await this.getCaptcha(),
+      task: 'gen_stem',
+      generation_type: 'TEXT',
+      title: title || '',
+      tags: '',
+      negative_tags: '',
+      mv: DEFAULT_MODEL,
+      prompt: '',
+      make_instrumental: true,
+      user_uploaded_images_b64: null,
+      metadata: {
+        create_mode: 'custom',
+        user_tier: '3eaebef3-ef46-446a-931c-3d50cd1514f1',
+        create_session_token: randomUUID(),
+        can_control_sliders: []
+      },
+      override_fields: [],
+      cover_clip_id: null,
+      cover_start_s: null,
+      cover_end_s: null,
+      persona_id: null,
+      artist_clip_id: null,
+      artist_start_s: null,
+      artist_end_s: null,
+      continue_clip_id: song_id,
+      continued_aligned_prompt: null,
+      continue_at: null,
+      stem_type_id: 91,
+      stem_type_group_name: 'Twelve',
+      stem_task: 'twelve',
+      transaction_uuid: randomUUID()
+    };
+
+    logger.info('generateAllStems payload:\n' + JSON.stringify(payload, null, 2));
+
+    const response = await this.client.post(
+      `${SunoApi.BASE_URL}/api/generate/v2-web/`,
+      payload,
+      {
+        timeout: 10000 // 10 seconds timeout
+      }
+    );
+
+    if (response.status !== 200) {
+      throw new Error('Error response: ' + response.statusText);
+    }
+
+    const stems = response.data.clips.map((clip: any) => ({
+      id: clip.id,
+      title: clip.title,
+      status: clip.status,
+      created_at: clip.created_at,
+      model_name: clip.model_name,
+      stem_from_id: clip.metadata.stem_from_id,
+      stem_task: clip.metadata.stem_task,
+      stem_type_id: clip.metadata.stem_type_id,
+      stem_type_group_name: clip.metadata.stem_type_group_name,
+      audio_url: clip.audio_url,
+      video_url: clip.video_url,
+      image_url: clip.image_url,
+      duration: clip.metadata.duration,
+      tags: clip.metadata.tags,
+      prompt: clip.metadata.prompt
+    }));
+
+    logger.info('generateAllStems response:\n' + JSON.stringify(stems, null, 2));
+
+    // Wait for stems to be generated if requested
+    if (wait_audio) {
+      const startTime = Date.now();
+      const stemIds = stems.map((stem: any) => stem.id);
+      let lastResponse: AudioInfo[] = [];
+      await sleep(5, 5);
+      
+      while (Date.now() - startTime < 120000) { // 2 minutes timeout for stems
+        const response = await this.get(stemIds);
+        const allCompleted = response.every(
+          (stem) => stem.status === 'streaming' || stem.status === 'complete'
+        );
+        const allError = response.every((stem) => stem.status === 'error');
+        
+        if (allCompleted || allError) {
+          return response;
+        }
+        
+        lastResponse = response;
+        await sleep(5, 10);
+        await this.keepAlive(true);
+      }
+      
+      return lastResponse;
+    }
+
+    return stems;
+  }
 
   /**
    * Get the lyric alignment for a song.

@@ -431,6 +431,142 @@ const swaggerDefinition = {
           }
         }
       }
+    },
+    "/api/generate_stems": {
+      "post": {
+        "summary": "Generate stems for a song",
+        "description": "Generate separate audio and music stems for a song",
+        "tags": ["Stems"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "audio_id": {
+                    "type": "string",
+                    "description": "ID of the song to generate stems for"
+                  }
+                },
+                "required": ["audio_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stems generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AudioInfo"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing audio_id"
+          },
+          "401": {
+            "description": "Unauthorized - invalid cookie"
+          },
+          "402": {
+            "description": "Payment required - insufficient credits"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/generate_all_stems": {
+      "post": {
+        "summary": "Generate all stems for a song",
+        "description": "Generate all 12 instrument stems (Vocals, Backing Vocals, Drums, Bass, Guitar, Keyboard, Percussion, Strings, Synth, FX, Brass, Woodwinds) for a song",
+        "tags": ["Stems"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "audio_id": {
+                    "type": "string",
+                    "description": "ID of the song to generate all stems for"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Optional title for the stems"
+                  },
+                  "wait_audio": {
+                    "type": "boolean",
+                    "description": "Whether to wait for all stems to be fully generated before returning",
+                    "default": false
+                  }
+                },
+                "required": ["audio_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "All stems generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/AudioInfo"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "stem_from_id": {
+                            "type": "string",
+                            "description": "ID of the original song this stem was generated from"
+                          },
+                          "stem_task": {
+                            "type": "string",
+                            "description": "Stem generation task type"
+                          },
+                          "stem_type_id": {
+                            "type": "number",
+                            "description": "Numeric ID of the stem type"
+                          },
+                          "stem_type_group_name": {
+                            "type": "string",
+                            "description": "Name of the stem type (e.g., Vocals, Drums, Bass, etc.)"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing audio_id"
+          },
+          "401": {
+            "description": "Unauthorized - invalid cookie"
+          },
+          "402": {
+            "description": "Payment required - insufficient credits"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
     }
   },
   components: {
