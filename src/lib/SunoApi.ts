@@ -774,7 +774,7 @@ class SunoApi {
       `${SunoApi.BASE_URL}/api/generate/v2-web/`,
       payload,
       {
-        timeout: 10000 // 10 seconds timeout
+        timeout: 100000 // 10 seconds timeout
       }
     );
 
@@ -809,7 +809,7 @@ class SunoApi {
       let lastResponse: AudioInfo[] = [];
       await sleep(5, 5);
       
-      while (Date.now() - startTime < 120000) { // 2 minutes timeout for stems
+      while (Date.now() - startTime < 600000) { // 5 minutes timeout for stems
         const response = await this.get(stemIds);
         const allCompleted = response.every(
           (stem) => stem.status === 'streaming' || stem.status === 'complete'
